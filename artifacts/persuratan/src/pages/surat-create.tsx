@@ -284,7 +284,19 @@ export default function SuratCreate() {
               </div>
 
               <div className="space-y-3">
-                <FormLabel>Dokumen Lampiran (Opsional)</FormLabel>
+                {/*
+                  PERBAIKAN: FormLabel sebelumnya digunakan di sini secara langsung
+                  DI LUAR komponen <FormField>. Ini menyebabkan error runtime:
+                  "useFormField should be used within <FormField>"
+                  karena FormLabel memanggil hook useFormField() yang hanya boleh
+                  dipanggil dalam konteks <FormField> render prop.
+
+                  SOLUSI: Gunakan <label> HTML biasa dengan class yang sama dengan
+                  FormLabel, sehingga tampilan identik tapi tidak membutuhkan konteks FormField.
+                */}
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Dokumen Lampiran (Opsional)
+                </label>
                 <div 
                   className={cn(
                     "border-2 border-dashed rounded-xl p-8 text-center transition-colors hover:bg-muted/50 cursor-pointer",

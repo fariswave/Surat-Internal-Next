@@ -17,7 +17,17 @@ import {
   getGetSuratListQueryKey,
   useDeleteSurat
 } from "@workspace/api-client-react";
-import type { GetSuratListJenis } from "@workspace/api-client-react/src/generated/api.schemas";
+/*
+  PERBAIKAN: Import sebelumnya menggunakan path internal yang tidak aman:
+  "@workspace/api-client-react/src/generated/api.schemas"
+  
+  Ini adalah anti-pattern karena mengakses file internal package secara langsung,
+  yang bisa rusak saat path file berubah atau package di-build.
+  
+  SOLUSI: Import dari barrel export resmi package (index.ts) yang menjamin
+  semua tipe tersedia tanpa ketergantungan pada struktur file internal.
+*/
+import type { GetSuratListJenis } from "@workspace/api-client-react";
 
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
