@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "rg6FgaHQXXJRKH-dbIyHM"
+uri = "file://LEARNING_GUIDE.md"
+type = "text"
+title = "LEARNING_GUIDE.md — Panduan Belajar 7 Hari"
