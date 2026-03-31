@@ -1,30 +1,273 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: API spesifikasi untuk Aplikasi Persuratan Internal
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+    description: Health check
+  - name: auth
+    description: Autentikasi pengguna
+  - name: surat
+    description: Manajemen surat masuk dan keluar
+  - name: dashboard
+    description: Data ringkasan dashboard
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
-          description: Healthy
+          description: Server sehat
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login pengguna
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login berhasil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Credentials salah
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Ambil profil pengguna saat ini
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Data profil pengguna
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Tidak terautentikasi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /surat:
+    get:
+      operationId: getSuratList
+      tags: [surat]
+      summary: Ambil daftar semua surat
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jenis
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [masuk, keluar]
+          description: Filter berdasarkan jenis surat
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Nomor halaman
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Jumlah item per halaman
+      responses:
+        "200":
+          description: Daftar surat berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuratListResponse"
+        "401":
+          description: Tidak terautentikasi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      operationId: createSurat
+      tags: [surat]
+      summary: Buat surat baru dengan upload file
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/CreateSuratRequest"
+      responses:
+        "201":
+          description: Surat berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Surat"
+        "400":
+          description: Data tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Tidak terautentikasi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /surat/{id}:
+    get:
+      operationId: getSuratById
+      tags: [surat]
+      summary: Ambil detail surat berdasarkan ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Detail surat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Surat"
+        "404":
+          description: Surat tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Tidak terautentikasi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      operationId: deleteSurat
+      tags: [surat]
+      summary: Hapus surat berdasarkan ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Surat berhasil dihapus
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Surat tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Tidak terautentikasi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Ambil statistik ringkasan untuk dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Data statistik dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+        "401":
+          description: Tidak terautentikasi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /dashboard/recent:
+    get:
+      operationId: getRecentSurat
+      tags: [dashboard]
+      summary: Ambil surat-surat terbaru untuk aktivitas feed
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Daftar surat terbaru
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Surat"
+        "401":
+          description: Tidak terautentikasi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +277,192 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        error:
+          type: string
+      required:
+        - message
+
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username pengguna
+        password:
+          type: string
+          description: Password pengguna
+      required:
+        - username
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT access token
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        namaLengkap:
+          type: string
+        role:
+          type: string
+          enum: [admin, staff, manager]
+        email:
+          type: string
+      required:
+        - id
+        - username
+        - namaLengkap
+        - role
+        - email
+
+    CreateSuratRequest:
+      type: object
+      properties:
+        nomorSurat:
+          type: string
+          description: Nomor surat resmi
+        perihal:
+          type: string
+          description: Perihal / subjek surat
+        pengirim:
+          type: string
+          description: Nama pengirim surat
+        penerima:
+          type: string
+          description: Nama penerima surat
+        jenis:
+          type: string
+          enum: [masuk, keluar]
+          description: Jenis surat (masuk atau keluar)
+        tanggalSurat:
+          type: string
+          description: Tanggal surat (ISO date string)
+        keterangan:
+          type: string
+          description: Keterangan tambahan (opsional)
+        file:
+          type: string
+          format: binary
+          description: File surat (PDF atau gambar)
+      required:
+        - nomorSurat
+        - perihal
+        - pengirim
+        - penerima
+        - jenis
+        - tanggalSurat
+
+    Surat:
+      type: object
+      properties:
+        id:
+          type: integer
+        nomorSurat:
+          type: string
+        perihal:
+          type: string
+        pengirim:
+          type: string
+        penerima:
+          type: string
+        jenis:
+          type: string
+          enum: [masuk, keluar]
+        tanggalSurat:
+          type: string
+        keterangan:
+          type: string
+          nullable: true
+        namaFile:
+          type: string
+          nullable: true
+        urlFile:
+          type: string
+          nullable: true
+        createdById:
+          type: integer
+        createdByName:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - nomorSurat
+        - perihal
+        - pengirim
+        - penerima
+        - jenis
+        - tanggalSurat
+        - createdById
+        - createdByName
+        - createdAt
+
+    SuratListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Surat"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+
+    DashboardStats:
+      type: object
+      properties:
+        totalSurat:
+          type: integer
+          description: Total semua surat
+        suratMasuk:
+          type: integer
+          description: Total surat masuk
+        suratKeluar:
+          type: integer
+          description: Total surat keluar
+        suratBulanIni:
+          type: integer
+          description: Surat yang masuk/keluar bulan ini
+        suratMingguIni:
+          type: integer
+          description: Surat yang masuk/keluar minggu ini
+      required:
+        - totalSurat
+        - suratMasuk
+        - suratKeluar
+        - suratBulanIni
+        - suratMingguIni
